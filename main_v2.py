@@ -13,34 +13,29 @@ nltk.download('stopwords')
 # Load English tokenizer, tagger, parser, NER and word vectors
 nlp = spacy.load("en_core_web_sm")
 
-def normalize_text(text):
-    """
-    Function to normalize text: lowercase and remove punctuation.
-    """
-    text = text.lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    return text
-
 def preprocess_text(text):
     """
-    Function to preprocess text by removing stop words and lemmatizing.
+    Function to preprocess text by normalizing, removing stop words and lemmatizing.
     """
+    # Normalize text: lowercase and remove punctuation
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+
+    # Removing stop words and lemmatization
     doc = nlp(text)
     lemmatized = [token.lemma_ for token in doc if token.text not in stopwords.words('english')]
+    
     return ' '.join(lemmatized)
 
-def find_similar_rows(df, original_column, new_column, similarity_threshold=0.75):
+def find_similar_rows(df, column, similarity_threshold=0.75):
     """
     Identify rows with similar search intent based on the specified column.
     """
-    # Normalize the text data in the original column
-    df[new_column] = df[original_column].apply(normalize_text)
-
-    # Preprocess the text data for similarity comparison
-    df['processed_' + new_column] = df[new_column].apply(preprocess_text)
+    # Preprocess the text data in the column
+    df[column] = df[column].apply(preprocess_text)
 
     vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(df['processed_' + new_column])
+    tfidf_matrix = vectorizer.fit_transform(df[column])
 
     cosine_sim = cosine_similarity(tfidf_matrix)
 
@@ -66,18 +61,8 @@ if file_path:
     # Read the original data
     df_original = pd.read_csv(file_path)
 
-    # Check if 'question' column exists, if not, ask for an alternative
-    if 'question' not in df_original.columns:
-        print("The 'question' column was not found in the file.")
-        original_column = input("Please enter the column name to process: ")
-    else:
-        original_column = 'question'
-
-    # Specify the new column name for normalized text
-    new_column = 'normalized_' + original_column
-
-    # Finding similar rows based on the specified column
-    similar_questions_indices_only = find_similar_rows(df_original, original_column, new_column)
+    # Finding similar rows based on 'question' column only
+    similar_questions_indices_only = find_similar_rows(df_original, 'question')
 
     # Filtering the DataFrame to remove rows with similar questions
     df_filtered_questions_only = df_original.drop(similar_questions_indices_only)

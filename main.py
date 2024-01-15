@@ -6,12 +6,37 @@ import tkinter as tk
 from tkinter import filedialog
 import spacy
 import string
+from langdetect import detect
 import nltk
-from nltk.corpus import stopwords
 nltk.download('stopwords')
+from nltk.corpus import stopwords
 
-# Load English tokenizer, tagger, parser, NER and word vectors
-nlp = spacy.load("en_core_web_sm")
+# Checking if stopwords are available for all required languages
+print('English stopwords available:', 'english' in stopwords.fileids())
+print('German stopwords available:', 'german' in stopwords.fileids())
+print('Spanish stopwords available:', 'spanish' in stopwords.fileids())
+
+# Load spaCy models for different languages
+nlp_en = spacy.load("en_core_web_sm")
+nlp_de = spacy.load("de_core_news_sm")
+nlp_es = spacy.load("es_core_news_sm")
+
+# Load stopwords for each language
+stopwords_dict = {
+    'en': set(stopwords.words('english')),
+    'de': set(stopwords.words('german')),
+    'es': set(stopwords.words('spanish'))
+}
+
+def get_spacy_model(language):
+    if language == 'en':
+        return nlp_en
+    elif language == 'de':
+        return nlp_de
+    elif language == 'es':
+        return nlp_es
+    else:
+        raise ValueError("Unsupported language")
 
 def normalize_text(text):
     """
@@ -21,23 +46,33 @@ def normalize_text(text):
     text = text.translate(str.maketrans('', '', string.punctuation))
     return text
 
-def preprocess_text(text):
+def preprocess_text(text, language):
     """
     Function to preprocess text by removing stop words and lemmatizing.
     """
+    nlp = get_spacy_model(language)
+    language_stopwords = stopwords_dict.get(language, set())
+    
     doc = nlp(text)
-    lemmatized = [token.lemma_ for token in doc if token.text not in stopwords.words('english')]
+    lemmatized = [token.lemma_ for token in doc if token.text not in language_stopwords]
     return ' '.join(lemmatized)
 
 def find_similar_rows(df, original_column, new_column, similarity_threshold=0.75):
     """
     Identify rows with similar search intent based on the specified column.
     """
+    # Determine the language of the first non-empty row
+    language = detect(df[original_column].dropna().iloc[0])
+
+     # Print the detected language
+    language_map = {'en': 'English', 'de': 'German', 'es': 'Spanish'}
+    print(f"Detected language: {language_map.get(language, 'Unknown')} ({language})")
+    
     # Normalize the text data in the original column
     df[new_column] = df[original_column].apply(normalize_text)
 
     # Preprocess the text data for similarity comparison
-    df['processed_' + new_column] = df[new_column].apply(preprocess_text)
+    df['processed_' + new_column] = df[new_column].apply(lambda x: preprocess_text(x, language))
 
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(df['processed_' + new_column])

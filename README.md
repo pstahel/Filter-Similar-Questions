@@ -1,14 +1,15 @@
-# Similar Questions Remover
+# Similar Question Filter
 
-This Python script identifies and removes rows with similar content in a specified column of a CSV file. It primarily targets the 'question' column, employing TF-IDF vectorization and cosine similarity for the task.
+This Python script is designed to identify and remove rows with similar content in a specified column of a CSV file. It supports multiple languages (English, German, Spanish) and employs advanced text processing techniques like normalization, stop word removal, and lemmatization.
 
 ## Features
 
-- Reads data from a CSV file.
-- Finds and removes rows with similar text in the 'question' column.
-- Saves the cleaned data as a new CSV file in the same directory.
-- Provides a file dialog for easy CSV file selection.
-- Outputs success message and statistics in the terminal.
+- Supports English, German, and Spanish languages.
+- Normalizes text by converting to lowercase and removing punctuation.
+- Removes stop words and applies lemmatization for more accurate similarity detection.
+- Uses TF-IDF vectorization and cosine similarity to identify similar rows.
+- Interactive file selection using a file dialog.
+- Saves the filtered data in the same directory as the original file.
 
 ## Requirements
 
@@ -17,37 +18,44 @@ This Python script identifies and removes rows with similar content in a specifi
 - scikit-learn
 - numpy
 - tkinter
+- spacy
+- langdetect
+- nltk
 
 ## Installation
 
-Ensure Python 3.x is installed on your system. Install the required packages using pip:
+Ensure Python 3.x is installed. Install the required packages using pip:
 
-```bash
-pip install pandas scikit-learn numpy tk
+```
+pip install pandas scikit-learn numpy tkinter spacy langdetect nltk
+python -m spacy download en_core_web_sm
+python -m spacy download de_core_news_sm
+python -m spacy download es_core_news_sm
 ```
 
-## Usage
+# Usage
 
-- Run the script.  
-- A file dialog will open. Select the CSV file you want to process.  
-- The script will process the file and save a new file with '_filtered' appended to the original filename in the same directory.  
-- Check the terminal for a success message and details about the number of rows processed and removed.
+1. Run the script.
+2. A file dialog will open. Select the CSV file you want to process.
+3. The script will automatically detect the language of the content, process the file, and save a new file with '_filtered' appended to the original filename in the same directory.
+4. The terminal will display the detected language, the location of the saved file, and statistics about the number of rows processed and removed.
 
 ## CSV File Format
 
-- The script expects the CSV file to have a column named 'question'.
-- The CSV should have a header row with column names.
-- The file should be in UTF-8 encoding or similar standard text format.
+- The script expects the CSV file to have a column named 'question' by default.
+- If the 'question' column is not found, it will prompt to enter an alternative column name.
+- The file should be in a standard CSV format with a header row.
 
 ## Note
 
-- The script is configured to process text data. Ensure the 'question' column contains text data.
-- You can modify the script to target a different column by changing the column name in the script.
+- The script is configured to process text data. Ensure the column you intend to process contains textual data.
+- The language detection is performed on the first non-empty row of the specified column.
 
 ## License
 
-This script is provided "as is", without warranty of any kind.
+- This script is provided "as is", without warranty of any kind.
 
 ## Contributing
 
-Feel free to fork, modify, and use this script in your projects. Contributions for improvements and bug fixes are welcome.
+- Feel free to fork, modify, and use this script in your projects.
+- Contributions for improvements and bug fixes are welcome.
